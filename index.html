@@ -58,7 +58,12 @@
     padding: 10px 12px; font-size: 14px; border: 1px solid var(--line);
     border-radius: 10px; background: var(--card); color: var(--ink); cursor: pointer;
   }
-  .facets { display: flex; flex-direction: column; gap: 10px; }
+  #togglefilters { display: inline-flex; align-items: center; gap: 6px; }
+  #togglefilters .caret { display: inline-block; transition: transform .15s; }
+  .controls.collapsed #togglefilters .caret { transform: rotate(-90deg); }
+  .controls.collapsed .facets { display: none; }
+  .fbadge { background: var(--accent); color: #fff; border-radius: 999px; font-size: 11px; line-height: 1; padding: 3px 7px; }
+  .facets { display: flex; flex-direction: column; gap: 10px; max-height: 45vh; overflow-y: auto; }
   .facet { display: flex; flex-wrap: wrap; gap: 7px; align-items: baseline; }
   .facet > .flabel {
     font-size: 11px; text-transform: uppercase; letter-spacing: .07em;
@@ -113,8 +118,9 @@
         <option value="title">Sort: A–Z</option>
       </select>
       <label class="toggle-wrap"><input type="checkbox" id="gemsonly"> Gems only (★4+)</label>
+      <button class="btn" id="togglefilters" type="button" aria-expanded="true" aria-controls="facetwrap"><span class="caret">▾</span> Filters<span class="fbadge" id="fbadge" style="display:none">0</span></button>
     </div>
-    <div class="facets">
+    <div class="facets" id="facetwrap">
       <div class="facet" id="facet-topics"><span class="flabel">Topic</span></div>
       <div class="facet" id="facet-ages"><span class="flabel">Age</span></div>
       <div class="facet" id="facet-types"><span class="flabel">Type</span></div>
@@ -166,6 +172,11 @@ buildChips("facet-types", [...tallyType()], state.types, byCountDesc);
 document.getElementById("q").addEventListener("input", e => { state.q = e.target.value.toLowerCase(); render(); });
 document.getElementById("sort").addEventListener("change", e => { state.sort = e.target.value; render(); });
 document.getElementById("gemsonly").addEventListener("change", e => { state.gemsOnly = e.target.checked; render(); });
+const controlsEl = document.querySelector(".controls");
+const toggleBtn = document.getElementById("togglefilters");
+function setCollapsed(c) { controlsEl.classList.toggle("collapsed", c); toggleBtn.setAttribute("aria-expanded", String(!c)); }
+toggleBtn.onclick = () => setCollapsed(!controlsEl.classList.contains("collapsed"));
+setCollapsed(window.innerWidth < 700);
 document.getElementById("clear").onclick = resetAll;
 document.getElementById("reset2").onclick = (e) => { e.preventDefault(); resetAll(); };
 function resetAll() {
@@ -204,6 +215,9 @@ function render() {
     grid.appendChild(card);
   });
   document.getElementById("count").textContent = rows.length + " of " + DATA.length + " posts";
+  const nf = state.topics.size + state.ages.size + state.types.size + (state.gemsOnly ? 1 : 0);
+  const fb = document.getElementById("fbadge");
+  fb.textContent = nf; fb.style.display = nf ? "inline-block" : "none";
   document.getElementById("empty").style.display = rows.length ? "none" : "block";
 }
 render();
